@@ -37,7 +37,7 @@ val appModule = module {
     // ViewModels
     viewModel { HomeViewModel(get(), get(), get(), androidContext()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { StatsViewModel(get(), get()) }
-    viewModel { BreakViewModel(get(), get()) }
+    viewModel { StatsViewModel(get(), get(), get()) }
+    viewModel { BreakViewModel(get(), get(), get()) }
     viewModel { OnboardingViewModel(get()) }
 }

@@ -14,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.viswa2k.eyecare.ui.theme.EyeCareTheme
 
 @Composable
 fun ProgressRing(
@@ -65,5 +67,13 @@ fun ProgressRing(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ProgressRingPreview() {
+    EyeCareTheme {
+        ProgressRing(progress = 0.7f, label = "Taken", value = "5")
     }
 }

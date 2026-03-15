@@ -9,19 +9,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.koin.androidx.compose.koinViewModel
+import com.viswa2k.eyecare.domain.BreakTipsProvider
 import com.viswa2k.eyecare.ui.break_.components.CountdownCircle
 import com.viswa2k.eyecare.ui.break_.components.EyeCareTip
+import org.koin.androidx.compose.koinViewModel
+
+private enum class ConfirmAction { SKIP, SNOOZE }
 
 @Composable
 fun BreakScreen(
@@ -30,6 +40,50 @@ fun BreakScreen(
     viewModel: BreakViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var confirmAction by remember { mutableStateOf<ConfirmAction?>(null) }
+    val confirmQuote = remember(confirmAction) { BreakTipsProvider.getRandomTip() }
+
+    // Confirmation dialog
+    confirmAction?.let { action ->
+        AlertDialog(
+            onDismissRequest = { confirmAction = null },
+            title = {
+                Text(
+                    text = if (action == ConfirmAction.SKIP) "Skip this break?"
+                           else "Snooze for ${uiState.snoozeDurationMinutes} min?",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    text = "\u201C$confirmQuote\u201D",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontStyle = FontStyle.Italic,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmAction = null
+                    when (action) {
+                        ConfirmAction.SKIP -> viewModel.skip()
+                        ConfirmAction.SNOOZE -> viewModel.snooze()
+                    }
+                    onDismiss()
+                }) {
+                    Text(if (action == ConfirmAction.SKIP) "Yes, Skip" else "Yes, Snooze")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmAction = null }) {
+                    Text("Take the Break")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -76,20 +130,14 @@ fun BreakScreen(
             }
         } else {
             Row {
-                OutlinedButton(onClick = {
-                    viewModel.skip()
-                    onDismiss()
-                }) {
+                OutlinedButton(onClick = { confirmAction = ConfirmAction.SKIP }) {
                     Text("Skip")
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                OutlinedButton(onClick = {
-                    viewModel.snooze()
-                    onDismiss()
-                }) {
-                    Text("Snooze")
+                OutlinedButton(onClick = { confirmAction = ConfirmAction.SNOOZE }) {
+                    Text("Snooze (${uiState.snoozeDurationMinutes}m)")
                 }
             }
         }

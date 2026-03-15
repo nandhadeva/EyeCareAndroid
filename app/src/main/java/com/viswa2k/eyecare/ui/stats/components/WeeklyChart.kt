@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.viswa2k.eyecare.data.db.entity.DailyStats
 import java.time.LocalDate
 import java.time.format.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import com.viswa2k.eyecare.ui.theme.EyeCareTheme
 import java.util.Locale
 
 @Composable
@@ -110,5 +112,21 @@ private fun DayBar(
             color = if (isToday) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WeeklyChartPreview() {
+    val today = LocalDate.now()
+    val sampleStats = (0..6).map { i ->
+        DailyStats(
+            date = today.minusDays((6 - i).toLong()).toString(),
+            breaksTaken = listOf(3, 5, 2, 7, 4, 6, 1)[i],
+            totalCycles = listOf(4, 6, 3, 8, 5, 7, 2)[i]
+        )
+    }
+    EyeCareTheme {
+        WeeklyChart(weeklyStats = sampleStats)
     }
 }

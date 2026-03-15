@@ -5,14 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.viswa2k.eyecare.data.db.entity.DailyStats
 import com.viswa2k.eyecare.domain.GetDailyStatsUseCase
 import com.viswa2k.eyecare.domain.GetStreakUseCase
+import com.viswa2k.eyecare.service.MonitoringState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class StatsViewModel(
     getDailyStatsUseCase: GetDailyStatsUseCase,
-    getStreakUseCase: GetStreakUseCase
+    getStreakUseCase: GetStreakUseCase,
+    monitoringState: MonitoringState
 ) : ViewModel() {
+
+    val screenOnTimeToday: StateFlow<Long> = monitoringState.screenOnTimeToday
 
     val todayStats: StateFlow<DailyStats?> = getDailyStatsUseCase.today()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

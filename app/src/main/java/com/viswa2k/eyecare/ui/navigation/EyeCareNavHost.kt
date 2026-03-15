@@ -25,7 +25,11 @@ fun EyeCareNavHost(
         modifier = modifier
     ) {
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onNavigateToBreak = {
+                    navController.navigate(BREAK_ROUTE)
+                }
+            )
         }
         composable(Screen.Stats.route) {
             StatsScreen()

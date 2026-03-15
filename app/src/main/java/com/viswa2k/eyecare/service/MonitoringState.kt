@@ -1,9 +1,18 @@
 package com.viswa2k.eyecare.service
 
 import com.viswa2k.eyecare.domain.TimerState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+sealed class BreakResult {
+    data object Taken : BreakResult()
+    data object Skipped : BreakResult()
+    data object Snoozed : BreakResult()
+}
 
 class MonitoringState {
 
@@ -12,6 +21,13 @@ class MonitoringState {
 
     private val _isMonitoring = MutableStateFlow(false)
     val isMonitoring: StateFlow<Boolean> = _isMonitoring.asStateFlow()
+
+    private val _breakResult = MutableSharedFlow<BreakResult>(extraBufferCapacity = 1)
+    val breakResult: SharedFlow<BreakResult> = _breakResult.asSharedFlow()
+
+    fun emitBreakResult(result: BreakResult) {
+        _breakResult.tryEmit(result)
+    }
 
     // Live screen-on time in millis, updated every second by the service
     private val _screenOnTimeToday = MutableStateFlow(0L)
@@ -30,6 +46,7 @@ class MonitoringState {
 
     fun resetTimer() {
         _timerState.value = TimerState(
+            totalMillis = _timerState.value.totalMillis,
             cycleCount = _timerState.value.cycleCount
         )
     }

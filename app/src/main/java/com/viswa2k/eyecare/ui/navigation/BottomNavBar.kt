@@ -6,6 +6,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.viswa2k.eyecare.ui.theme.EyeCareTheme
 
 @Composable
 fun BottomNavBar(
@@ -26,5 +28,16 @@ fun BottomNavBar(
                 onClick = { onNavigate(items[index]) }
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun BottomNavBarPreview() {
+    EyeCareTheme {
+        BottomNavBar(
+            currentRoute = Screen.Home.route,
+            onNavigate = {}
+        )
     }
 }

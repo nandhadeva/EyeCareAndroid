@@ -38,6 +38,7 @@ class EyeCareService : Service() {
 
         registerScreenReceiver()
         observeTimerState()
+        observeBreakResult()
         startScreenTimeTracker()
     }
 
@@ -78,11 +79,6 @@ class EyeCareService : Service() {
     private fun startMonitoring() {
         monitoringState.setMonitoring(true)
 
-        serviceScope.launch {
-            val cycleDuration = preferencesManager.cycleDurationMinutes.first()
-            timerManager.setCycleDuration(cycleDuration)
-        }
-
         val notification = notificationHelper.buildMonitoringNotification(20, 0)
         startForeground(
             NotificationHelper.MONITORING_NOTIFICATION_ID,
@@ -90,7 +86,11 @@ class EyeCareService : Service() {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
 
-        timerManager.resetAndStart()
+        serviceScope.launch {
+            val cycleDuration = preferencesManager.cycleDurationMinutes.first()
+            timerManager.setCycleDuration(cycleDuration)
+            timerManager.resetAndStart()
+        }
     }
 
     private fun stopMonitoring() {
@@ -141,14 +141,35 @@ class EyeCareService : Service() {
         }
     }
 
+    private fun observeBreakResult() {
+        serviceScope.launch {
+            monitoringState.breakResult.collect { result ->
+                when (result) {
+                    is BreakResult.Taken, is BreakResult.Skipped -> {
+                        // Restart full cycle timer
+                        val cycleDuration = preferencesManager.cycleDurationMinutes.first()
+                        timerManager.setCycleDuration(cycleDuration)
+                        timerManager.resetAndStart()
+                    }
+                    is BreakResult.Snoozed -> {
+                        // Restart with snooze duration
+                        val snoozeDuration = preferencesManager.snoozeDurationMinutes.first()
+                        timerManager.startSnooze(snoozeDuration)
+                    }
+                }
+            }
+        }
+    }
+
     private suspend fun onCycleComplete() {
+        // Timer stays stopped — waiting for user to take/skip/snooze break
         val mode = preferencesManager.breakReminderMode.first()
         when (mode) {
             BreakReminderMode.NOTIFICATION -> {
                 notificationHelper.showBreakNotification()
-                timerManager.resetAndStart()
             }
             BreakReminderMode.SILENT -> {
+                // Silent mode: auto-restart since there's no user interaction
                 timerManager.resetAndStart()
             }
             BreakReminderMode.FULL_SCREEN -> {
@@ -156,12 +177,10 @@ class EyeCareService : Service() {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 startActivity(breakIntent)
-                timerManager.resetAndStart()
             }
             BreakReminderMode.OVERLAY_POPUP -> {
                 val overlayIntent = Intent(this, com.viswa2k.eyecare.ui.break_.BreakOverlayService::class.java)
                 startService(overlayIntent)
-                timerManager.resetAndStart()
             }
         }
     }

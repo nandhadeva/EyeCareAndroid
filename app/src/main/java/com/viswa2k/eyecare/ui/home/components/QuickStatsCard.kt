@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.viswa2k.eyecare.data.db.entity.DailyStats
+import com.viswa2k.eyecare.ui.theme.EyeCareTheme
 
 @Composable
 fun QuickStatsCard(
@@ -39,6 +41,21 @@ fun QuickStatsCard(
                 label = "Skipped"
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun QuickStatsCardPreview() {
+    EyeCareTheme {
+        QuickStatsCard(
+            todayStats = DailyStats(
+                date = "2026-03-15",
+                breaksTaken = 5,
+                breaksSkipped = 1,
+                totalCycles = 6
+            )
+        )
     }
 }
 

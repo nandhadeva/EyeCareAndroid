@@ -29,6 +29,7 @@ class TimerManager(
                 monitoringState.updateTimerState(
                     monitoringState.timerState.value.copy(
                         remainingMillis = millisUntilFinished,
+                        totalMillis = cycleDurationMillis,
                         isRunning = true
                     )
                 )
@@ -39,6 +40,7 @@ class TimerManager(
                 monitoringState.updateTimerState(
                     TimerState(
                         remainingMillis = 0,
+                        totalMillis = cycleDurationMillis,
                         isRunning = false,
                         cycleCount = currentCycleCount
                     )
@@ -62,6 +64,7 @@ class TimerManager(
         monitoringState.updateTimerState(
             TimerState(
                 remainingMillis = cycleDurationMillis,
+                totalMillis = cycleDurationMillis,
                 isRunning = false,
                 cycleCount = monitoringState.timerState.value.cycleCount
             )
@@ -71,5 +74,46 @@ class TimerManager(
     fun resetAndStart() {
         reset()
         start()
+    }
+
+    fun startSnooze(snoozeMinutes: Int) {
+        cancel()
+        val snoozeMillis = snoozeMinutes * 60 * 1000L
+        monitoringState.updateTimerState(
+            TimerState(
+                remainingMillis = snoozeMillis,
+                totalMillis = snoozeMillis,
+                isRunning = false,
+                cycleCount = monitoringState.timerState.value.cycleCount
+            )
+        )
+        countDownTimer = object : CountDownTimer(snoozeMillis, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                monitoringState.updateTimerState(
+                    monitoringState.timerState.value.copy(
+                        remainingMillis = millisUntilFinished,
+                        totalMillis = snoozeMillis,
+                        isRunning = true
+                    )
+                )
+            }
+
+            override fun onFinish() {
+                val currentCycleCount = monitoringState.timerState.value.cycleCount
+                monitoringState.updateTimerState(
+                    TimerState(
+                        remainingMillis = 0,
+                        totalMillis = snoozeMillis,
+                        isRunning = false,
+                        cycleCount = currentCycleCount
+                    )
+                )
+                onCycleComplete?.invoke()
+            }
+        }.start()
+
+        monitoringState.updateTimerState(
+            monitoringState.timerState.value.copy(isRunning = true)
+        )
     }
 }

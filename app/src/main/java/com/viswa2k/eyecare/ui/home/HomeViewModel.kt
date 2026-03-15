@@ -38,18 +38,7 @@ class HomeViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
-        // Start screen time tracking immediately (even before service starts)
-        if (monitoringState.screenOnTimeToday.value == 0L) {
-            monitoringState.onScreenOn()
-            viewModelScope.launch {
-                while (true) {
-                    kotlinx.coroutines.delay(1000L)
-                    monitoringState.tickScreenTime()
-                }
-            }
-        }
-
-        // Auto-start monitoring when app opens
+        // Auto-start monitoring when app opens (service handles screen time tracking)
         viewModelScope.launch {
             if (!monitoringState.isMonitoring.value && hasNotificationPermission()) {
                 startService()
@@ -86,7 +75,6 @@ class HomeViewModel(
             }
             context.startForegroundService(intent)
         } catch (e: Exception) {
-            // Service failed to start — don't crash the app
             monitoringState.setMonitoring(false)
         }
     }

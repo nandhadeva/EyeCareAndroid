@@ -7,6 +7,8 @@ import com.viswa2k.eyecare.data.datastore.PreferencesManager
 import com.viswa2k.eyecare.data.db.entity.BreakEventType
 import com.viswa2k.eyecare.domain.BreakTipsProvider
 import com.viswa2k.eyecare.domain.RecordBreakEventUseCase
+import com.viswa2k.eyecare.service.BreakResult
+import com.viswa2k.eyecare.service.MonitoringState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,14 +19,16 @@ data class BreakUiState(
     val remainingSeconds: Int = 20,
     val totalSeconds: Int = 20,
     val tip: String = BreakTipsProvider.getRandomTip(),
+    val snoozeDurationMinutes: Int = 5,
     val isFinished: Boolean = false
 ) {
-    val progress: Float get() = remainingSeconds.toFloat() / totalSeconds
+    val progress: Float get() = if (totalSeconds > 0) remainingSeconds.toFloat() / totalSeconds else 1f
 }
 
 class BreakViewModel(
     private val recordBreakEventUseCase: RecordBreakEventUseCase,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val monitoringState: MonitoringState
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BreakUiState())
@@ -35,9 +39,11 @@ class BreakViewModel(
     init {
         viewModelScope.launch {
             val breakDuration = preferencesManager.breakDurationSeconds.first()
+            val snoozeDuration = preferencesManager.snoozeDurationMinutes.first()
             _uiState.value = BreakUiState(
                 remainingSeconds = breakDuration,
-                totalSeconds = breakDuration
+                totalSeconds = breakDuration,
+                snoozeDurationMinutes = snoozeDuration
             )
             startCountdown(breakDuration)
         }
@@ -59,6 +65,7 @@ class BreakViewModel(
                 viewModelScope.launch {
                     recordBreakEventUseCase(BreakEventType.TAKEN)
                 }
+                monitoringState.emitBreakResult(BreakResult.Taken)
             }
         }.start()
     }
@@ -68,6 +75,7 @@ class BreakViewModel(
         viewModelScope.launch {
             recordBreakEventUseCase(BreakEventType.SKIPPED)
         }
+        monitoringState.emitBreakResult(BreakResult.Skipped)
     }
 
     fun snooze() {
@@ -75,6 +83,7 @@ class BreakViewModel(
         viewModelScope.launch {
             recordBreakEventUseCase(BreakEventType.SNOOZED)
         }
+        monitoringState.emitBreakResult(BreakResult.Snoozed)
     }
 
     override fun onCleared() {

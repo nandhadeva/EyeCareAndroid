@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.viswa2k.eyecare.data.db.entity.DailyStats
 import java.time.LocalDate
 import java.time.format.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import com.viswa2k.eyecare.ui.theme.EyeCareTheme
 import java.util.Locale
 
 @Composable
@@ -83,5 +85,21 @@ fun StreakHistory(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun StreakHistoryPreview() {
+    val today = LocalDate.now()
+    val sampleStats = (0..6).map { i ->
+        DailyStats(
+            date = today.minusDays((6 - i).toLong()).toString(),
+            breaksTaken = listOf(3, 0, 2, 5, 0, 4, 1)[i],
+            totalCycles = listOf(4, 0, 3, 6, 0, 5, 2)[i]
+        )
+    }
+    EyeCareTheme {
+        StreakHistory(weeklyStats = sampleStats)
     }
 }

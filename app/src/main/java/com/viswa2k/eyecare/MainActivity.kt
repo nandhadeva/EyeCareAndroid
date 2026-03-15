@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,7 +20,10 @@ import com.viswa2k.eyecare.ui.navigation.BottomNavBar
 import com.viswa2k.eyecare.ui.navigation.EyeCareNavHost
 import com.viswa2k.eyecare.ui.navigation.ONBOARDING_ROUTE
 import com.viswa2k.eyecare.ui.navigation.Screen
+import com.viswa2k.eyecare.ui.theme.AccentColor
 import com.viswa2k.eyecare.ui.theme.EyeCareTheme
+import com.viswa2k.eyecare.ui.theme.ThemeMode
+import com.viswa2k.eyecare.ui.theme.hexToColor
 import kotlinx.coroutines.flow.first
 import org.koin.android.ext.android.inject
 
@@ -31,13 +35,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EyeCareTheme {
+            val primaryHex by preferencesManager.accentColor.collectAsState(initial = "2E7D6F")
+            val secondaryHex by preferencesManager.secondaryAccentColor.collectAsState(initial = "2E7D32")
+            val themeModeName by preferencesManager.themeMode.collectAsState(initial = "SYSTEM")
+
+            val primaryColor = hexToColor(primaryHex) ?: AccentColor.TEAL.lightPrimary
+            val secondaryColor = hexToColor(secondaryHex) ?: AccentColor.GREEN.lightPrimary
+            val themeMode = try { ThemeMode.valueOf(themeModeName) } catch (_: Exception) { ThemeMode.SYSTEM }
+
+            EyeCareTheme(
+                themeMode = themeMode,
+                primaryColor = primaryColor,
+                secondaryColor = secondaryColor
+            ) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 var isReady by remember { mutableStateOf(false) }
 
-                // Check onboarding on first launch
                 LaunchedEffect(Unit) {
                     val onboardingDone = preferencesManager.onboardingCompleted.first()
                     if (!onboardingDone) {
