@@ -48,7 +48,7 @@ private fun EyeCareWidgetContent(state: WidgetState) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Eye Care",
+            text = "Eye2020",
             style = TextStyle(fontWeight = FontWeight.Bold)
         )
 

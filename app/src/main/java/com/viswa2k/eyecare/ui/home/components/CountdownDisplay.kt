@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
@@ -33,8 +32,7 @@ fun CountdownDisplay(
     )
 
     val primaryColor = MaterialTheme.colorScheme.primary
-    val primaryLight = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-    val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
+    val trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -45,18 +43,16 @@ fun CountdownDisplay(
 
             // Background track
             drawArc(
-                color = surfaceVariantColor,
+                color = trackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // Gradient progress arc
+            // Progress arc
             drawArc(
-                brush = Brush.sweepGradient(
-                    colors = listOf(primaryLight, primaryColor)
-                ),
+                color = primaryColor,
                 startAngle = -90f,
                 sweepAngle = 360f * animatedProgress,
                 useCenter = false,

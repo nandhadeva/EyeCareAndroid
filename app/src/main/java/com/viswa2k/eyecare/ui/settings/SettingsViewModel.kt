@@ -4,13 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.viswa2k.eyecare.data.datastore.BreakReminderMode
 import com.viswa2k.eyecare.data.datastore.PreferencesManager
+import com.viswa2k.eyecare.service.MonitoringState
+import com.viswa2k.eyecare.service.TimerManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val timerManager: TimerManager,
+    private val monitoringState: MonitoringState
 ) : ViewModel() {
 
     val accentColor: StateFlow<String> = preferencesManager.accentColor
@@ -61,6 +65,10 @@ class SettingsViewModel(
 
     fun setCycleDurationMinutes(minutes: Int) {
         viewModelScope.launch { preferencesManager.setCycleDurationMinutes(minutes) }
+        timerManager.setCycleDuration(minutes)
+        if (monitoringState.isMonitoring.value) {
+            timerManager.resetAndStart()
+        }
     }
 
     fun setBreakDurationSeconds(seconds: Int) {
